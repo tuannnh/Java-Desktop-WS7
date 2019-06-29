@@ -8,6 +8,8 @@ import java.net.Socket;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
+import javax.swing.text.Document;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -21,13 +23,15 @@ import javax.swing.JTextArea;
 public class OutputThread extends Thread {
 
     Socket socket;
-    JTextArea txt;
+    JTextPane txt;
     BufferedReader bf;
     String sender;
     String receiver;
+    Document doc;
+
     final JFileChooser fc = new JFileChooser();
 
-    public OutputThread(Socket s, JTextArea txt, String sender, String receiver) {
+    public OutputThread(Socket s, JTextPane txt, String sender, String receiver) {
         super();
         this.socket = s;
         this.txt = txt;
@@ -39,49 +43,7 @@ public class OutputThread extends Thread {
             JOptionPane.showMessageDialog(null, "Network Error!");
             System.exit(0);
         }
-    }
-
-    private void saveFile() {
-        int yes = JOptionPane.showConfirmDialog(null, "Your friend sent you a text file, do you want to save?", "Important!", JOptionPane.YES_NO_OPTION);
-        if (yes == JOptionPane.YES_OPTION) {
-            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            fc.setDialogTitle("Choose a Directory to save your Text File");
-            int result = fc.showSaveDialog(null);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                try {
-                    File dir = fc.getSelectedFile();
-                    String fileName = bf.readLine();
-                    FileWriter fw = new FileWriter(dir.getAbsolutePath() + "\\" + fileName);
-                    PrintWriter pw = new PrintWriter(fw);
-                    JOptionPane.showMessageDialog(null, fileName);
-                    String s;
-                    String end = "###EOF###";
-                    while (!(s = bf.readLine()).equalsIgnoreCase(end)) {
-                        pw.println(s);
-                        pw.flush();
-                    }
-                    pw.close();
-                    fw.close();
-                    txt.append("\n" + this.receiver + ": " + bf.readLine());
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(null, e);
-                }
-
-            }
-        }
-        
-        else {
-                try {
-                    String s;
-                    String end = "###EOF###";
-                    while (!(s = bf.readLine()).equalsIgnoreCase(end)) {
-                    }
-                    bf.readLine();
-                    txt.append("\n" + this.receiver + ": " + bf.readLine());
-                } catch (Exception e) {
-                }
-
-            }
+        doc = this.txt.getDocument();
 
     }
 
@@ -90,15 +52,15 @@ public class OutputThread extends Thread {
         while (true) {
             try {
                 if (socket != null) {
-                    String msg = bf.readLine();
-                    if (msg.equalsIgnoreCase("##@@$$")) {
-                        saveFile();
-                    } else {
-                        txt.append("\n" + this.receiver + ": " + msg);
+                    String msg = "";
+                    if ((msg = bf.readLine()) != null && msg.length() > 0) {
+                        doc.insertString(doc.getLength(), this.receiver + ": " + msg+"\n", null);
                     }
                     sleep(50);
                 }
             } catch (Exception e) {
+                 JOptionPane.showMessageDialog(null, receiver + " is Offline.");
+                 return;
             }
         }
     }

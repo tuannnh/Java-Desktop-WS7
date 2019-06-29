@@ -23,12 +23,15 @@ import javax.swing.JOptionPane;
 public class Chat extends javax.swing.JFrame implements Runnable {
 
     //Server Role
+    ServerSocket fileSocket = null;
     ServerSocket thisSocket = null;
     BufferedReader br = null;
     DataOutputStream os = null;
     Thread t; //Thread for exploring connection from clients;
+
     //Client Role
     Socket srvSocket = null;
+    Socket fileServerSocket = null;
     String srvIP = "";
     int srvPort = 0;
     String name = "";
@@ -36,28 +39,45 @@ public class Chat extends javax.swing.JFrame implements Runnable {
     OutputThread ot = null;
     BufferedReader bf = null;
     ChatPanel cp;
+    Thread clientThread;
+    boolean isConnected = false;
 
     public Chat() {
         initComponents();
-        this.getRootPane().setDefaultButton(btnConnect);
         //Server Role
+        try {
+            do {
+                this.txtName.setText(name = JOptionPane.showInputDialog("Please enter Nickname:"));
+                if (name.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Your name is required.");
+                }
+            } while (name.isEmpty());
+        } catch (Exception e) {
+            System.exit(0);
+        }
+        this.txtServerIP.requestFocus();
         Random rd = new Random();
         int min = 49152;
         int max = 65535;
-        int thisPort = rd.nextInt((max - min) + min);
+        int thisPort;
+        int filePort;
+        do {
+            thisPort = rd.nextInt((max - min) + min);
+            filePort = rd.nextInt((max - min) + min);
+        } while (filePort == thisPort);
+
         try {
-            String srvName = this.txtName.getText();
             thisSocket = new ServerSocket(thisPort);
+            fileSocket = new ServerSocket(filePort);
             lblThisIP.setText(Inet4Address.getLocalHost().getHostAddress());
             lblThisPort.setText(String.valueOf(thisPort));
-            this.txtServerPort.setText(lblThisPort.getText());
 
         } catch (Exception e) {
         }
 
         t = new Thread(this);
         t.start();
-        //Client Role
+        getRootPane().setDefaultButton(btnConnect);
     }
 
     /**
@@ -89,7 +109,7 @@ public class Chat extends javax.swing.JFrame implements Runnable {
 
         panelInfo.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Infomation", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Monospaced", 0, 11), new java.awt.Color(0, 51, 153))); // NOI18N
         panelInfo.setMinimumSize(new java.awt.Dimension(500, 110));
-        panelInfo.setPreferredSize(new java.awt.Dimension(500, 110));
+        panelInfo.setPreferredSize(new java.awt.Dimension(500, 90));
         panelInfo.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 3, 5));
 
         jLabel1.setFont(new java.awt.Font("Monospaced", 0, 11)); // NOI18N
@@ -123,7 +143,6 @@ public class Chat extends javax.swing.JFrame implements Runnable {
         panelInfo.add(jLabel5);
 
         txtServerIP.setFont(new java.awt.Font("Monospaced", 0, 12)); // NOI18N
-        txtServerIP.setText("127.0.0.1");
         txtServerIP.setPreferredSize(new java.awt.Dimension(115, 28));
         txtServerIP.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -143,11 +162,16 @@ public class Chat extends javax.swing.JFrame implements Runnable {
                 txtServerPortActionPerformed(evt);
             }
         });
+        txtServerPort.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtServerPortKeyReleased(evt);
+            }
+        });
         panelInfo.add(txtServerPort);
 
         btnConnect.setFont(new java.awt.Font("Monospaced", 0, 12)); // NOI18N
         btnConnect.setText("Connect");
-        btnConnect.setPreferredSize(new java.awt.Dimension(90, 25));
+        btnConnect.setPreferredSize(new java.awt.Dimension(100, 25));
         btnConnect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnConnectActionPerformed(evt);
@@ -157,9 +181,9 @@ public class Chat extends javax.swing.JFrame implements Runnable {
 
         getContentPane().add(panelInfo, java.awt.BorderLayout.PAGE_START);
 
-        tabPanel.setMinimumSize(new java.awt.Dimension(500, 300));
+        tabPanel.setMinimumSize(new java.awt.Dimension(500, 400));
         tabPanel.setOpaque(true);
-        tabPanel.setPreferredSize(new java.awt.Dimension(500, 300));
+        tabPanel.setPreferredSize(new java.awt.Dimension(500, 400));
         getContentPane().add(tabPanel, java.awt.BorderLayout.CENTER);
 
         pack();
@@ -169,32 +193,53 @@ public class Chat extends javax.swing.JFrame implements Runnable {
         // TODO add your handling code here:
     }//GEN-LAST:event_txtServerIPActionPerformed
 
+
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
         //Connect to server
+        if (this.txtServerIP.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid IP!");
+            this.txtServerIP.requestFocus();
+            return;
+        }
+        if (this.txtServerPort.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid port!");
+            this.txtServerPort.requestFocus();
+            return;
+        }
+
         srvIP = this.txtServerIP.getText();
         srvPort = Integer.parseInt(txtServerPort.getText());
-        name = txtName.getText();
+        name = this.txtName.getText();
 
         try {
             srvSocket = new Socket(srvIP, srvPort);
             if (srvSocket != null) {
+                isConnected = true;
                 bf = new BufferedReader(new InputStreamReader(srvSocket.getInputStream()));
-                String srvName = srvSocket.getInetAddress().getHostName();
-                cp = new ChatPanel(srvSocket, name, srvName);
-                tabPanel.add(srvName, cp);
-                cp.updateUI();
+                String s = bf.readLine();
+                int pos = s.indexOf(":");//Format: Client:Hoa
+                String srvName = s.substring(pos + 1);//Get name
+                String hostName = this.txtName.getText();
 
+                s = bf.readLine();
+                pos = s.indexOf(":");
+                int filePort = Integer.parseInt(s.substring(pos + 1));
+                fileServerSocket = new Socket(srvIP, filePort);
+                if (fileServerSocket != null) {
+                    cp = new ChatPanel(srvSocket, fileServerSocket, hostName, srvName);
+                    tabPanel.add(srvName, cp);
+                    cp.updateUI();
+                }
                 dos = new DataOutputStream(srvSocket.getOutputStream());
                 // Annouce to server
                 dos.writeBytes("Client:" + name);
                 dos.writeByte(13);
                 dos.writeByte(10);
                 dos.flush();
-
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e);
-
+            JOptionPane.showMessageDialog(this, "Connect button");
+            System.exit(0);
         }
 
 
@@ -203,6 +248,11 @@ public class Chat extends javax.swing.JFrame implements Runnable {
     private void txtServerPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtServerPortActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txtServerPortActionPerformed
+
+    private void txtServerPortKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtServerPortKeyReleased
+        // TODO add your handling code here:
+
+    }//GEN-LAST:event_txtServerPortKeyReleased
 
     /**
      * @param args the command line arguments
@@ -232,25 +282,40 @@ public class Chat extends javax.swing.JFrame implements Runnable {
 
     @Override
     public void run() {
+
         while (true) {
             try {
+
                 //Wait for a client
-                Socket aClientSocket = thisSocket.accept();
-                if (aClientSocket != null) {
-                    br = new BufferedReader(new InputStreamReader(aClientSocket.getInputStream()));
+                Socket chatClientSocket = thisSocket.accept();
+                if (chatClientSocket != null) {
+                    isConnected = true;
+                    String hostName = this.txtName.getText();
+                    //                    Send filePort
+                    os = new DataOutputStream(chatClientSocket.getOutputStream());
+                    os.writeBytes("Host:" + hostName);
+                    os.writeByte(13);
+
+                    os.writeBytes("Port:" + fileSocket.getLocalPort());
+                    os.writeByte(13);
+                    os.writeByte(10);
+                    os.flush();
+
+                    br = new BufferedReader(new InputStreamReader(chatClientSocket.getInputStream()));
                     String s = br.readLine();
                     int pos = s.indexOf(":");//Format: Client:Hoa
                     String clientName = s.substring(pos + 1);//Get name
-                    String hostName = this.txtName.getText();
+
+                    Socket fileClientSocket = fileSocket.accept();
                     //Create a tab for this connection
-                    ChatPanel p = new ChatPanel(aClientSocket, hostName, clientName);
-                    tabPanel.add(clientName, p);
-                    os = new DataOutputStream(aClientSocket.getOutputStream());
+                    if (fileClientSocket != null) {
+                        ChatPanel p = new ChatPanel(chatClientSocket, fileClientSocket, hostName, clientName);
+                        tabPanel.add(clientName, p);
+                    }
                 }
-                Thread.sleep(50);
-
+                Thread.sleep(500);
             } catch (Exception e) {
-
+                JOptionPane.showMessageDialog(this, "Dsicconected!");
             }
         }
     }

@@ -1,13 +1,38 @@
 
+import java.awt.Font;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import static java.lang.Thread.sleep;
 import java.net.Socket;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
-import javax.swing.JRootPane;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.Document;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -20,42 +45,68 @@ import javax.swing.JTextArea;
  */
 public class ChatPanel extends javax.swing.JPanel {
 
-    Socket socket = null;
+    Socket chatSocket = null;
+    Socket transSocket = null;
     BufferedReader bf = null;
-    DataOutputStream os = null;
+    BufferedReader br = null;
+    DataOutputStream dosChat = null;
     OutputThread t = null;
     String sender;
     String receiver;
     final JFileChooser fc = new JFileChooser();
 
-    
+    DataInputStream fileIn = null;
+    DataOutputStream dosfile = null;
+    OutputStream os = null;
+    TransferThread transThread = null;
+    Document docContent,docMessage;
 
-    public ChatPanel(Socket s, String sender, String receiver) {
+    Hashtable<String, String> emos = new Hashtable<>();
+    EmoThread emoThread = null;
+
+    public ChatPanel(Socket textSocket, Socket fileSocket, String sender, String receiver) {
         initComponents();
-        this.txtConversation.setEditable(false);
+        try {
+            ImageIcon emoIcon = new ImageIcon(getClass().getResource("/icon/btnEmo.png"));
+            btnEmoji.setIcon(resizeIcon(emoIcon, 23, 23));
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+        this.txtContent.setEditable(false);
         this.txtMessage.setFocusable(true);
-        socket = s;
+
+        this.chatSocket = textSocket;
+        this.transSocket = fileSocket;
         this.sender = sender;
         this.receiver = receiver;
         try {
             //Input buffer and Output Buffer
-            bf = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            os = new DataOutputStream(socket.getOutputStream());
-            t = new OutputThread(socket, txtConversation, sender, receiver);
+            bf = new BufferedReader(new InputStreamReader(chatSocket.getInputStream()));
+            dosChat = new DataOutputStream(chatSocket.getOutputStream());
+            t = new OutputThread(chatSocket, txtContent, sender, receiver);
             t.start();
+
+            dosfile = new DataOutputStream(transSocket.getOutputStream());
+            fileIn = new DataInputStream(transSocket.getInputStream());
+            br = new BufferedReader(new InputStreamReader(transSocket.getInputStream()));
+
+            transThread = new TransferThread(transSocket, txtContent, sender, receiver);
+            transThread.start();
+
+            emoThread = new EmoThread(txtMessage, txtContent);
+            emoThread.start();
+
+            for (int i = 1; i < 21; i++) {
+                emos.put(":emo" + i, "" + i);
+            }
         } catch (Exception e) {
         }
+
+        docContent = this.txtContent.getDocument();
+        docMessage = this.txtMessage.getDocument();
         
+        emoScrollPanel.setVisible(false);
     }
-
-    public JTextArea getTxtConversation() {
-        return this.txtConversation;
-    }
-
-    public void setTxtConversation(JTextArea txtConversation) {
-        this.txtConversation = txtConversation;
-    }
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -65,38 +116,43 @@ public class ChatPanel extends javax.swing.JPanel {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        java.awt.GridBagConstraints gridBagConstraints;
 
-        panelEmoji = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        txtConversation = new javax.swing.JTextArea();
+        jLayeredPane1 = new javax.swing.JLayeredPane();
         panelMessage = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        txtMessage = new javax.swing.JTextArea();
         btnSend = new javax.swing.JButton();
         btnSendFile = new javax.swing.JButton();
         btnEmoji = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        txtMessage = new javax.swing.JTextPane();
+        emoScrollPanel = new javax.swing.JScrollPane();
+        emoPanel = new javax.swing.JPanel();
+        btnEmo1 = new javax.swing.JButton();
+        btnEmo2 = new javax.swing.JButton();
+        btnEmo3 = new javax.swing.JButton();
+        btnEmo4 = new javax.swing.JButton();
+        btnEmo5 = new javax.swing.JButton();
+        btnEmo6 = new javax.swing.JButton();
+        btnEmo7 = new javax.swing.JButton();
+        btnEmo8 = new javax.swing.JButton();
+        btnEmo9 = new javax.swing.JButton();
+        btnEmo10 = new javax.swing.JButton();
+        btnEmo11 = new javax.swing.JButton();
+        btnEmo12 = new javax.swing.JButton();
+        btnEmo13 = new javax.swing.JButton();
+        btnEmo14 = new javax.swing.JButton();
+        btnEmo15 = new javax.swing.JButton();
+        btnEmo16 = new javax.swing.JButton();
+        btnEmo17 = new javax.swing.JButton();
+        btnEmo18 = new javax.swing.JButton();
+        btnEmo19 = new javax.swing.JButton();
+        btnEmo20 = new javax.swing.JButton();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        txtContent = new javax.swing.JTextPane();
 
-        javax.swing.GroupLayout panelEmojiLayout = new javax.swing.GroupLayout(panelEmoji);
-        panelEmoji.setLayout(panelEmojiLayout);
-        panelEmojiLayout.setHorizontalGroup(
-            panelEmojiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
-        panelEmojiLayout.setVerticalGroup(
-            panelEmojiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
-
-        txtConversation.setColumns(20);
-        txtConversation.setRows(5);
-        jScrollPane1.setViewportView(txtConversation);
+        jLayeredPane1.setOpaque(true);
 
         panelMessage.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Message", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Monospaced", 1, 13), new java.awt.Color(0, 102, 255))); // NOI18N
-
-        txtMessage.setColumns(20);
-        txtMessage.setRows(5);
-        txtMessage.setNextFocusableComponent(txtMessage);
-        jScrollPane2.setViewportView(txtMessage);
 
         btnSend.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
         btnSend.setMnemonic('\r');
@@ -114,105 +170,605 @@ public class ChatPanel extends javax.swing.JPanel {
             }
         });
 
-        btnEmoji.setText("Emoji");
+        btnEmoji.setBorder(null);
+        btnEmoji.setBorderPainted(false);
+        btnEmoji.setContentAreaFilled(false);
+        btnEmoji.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmoji.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnEmoji.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        btnEmoji.setMaximumSize(new java.awt.Dimension(23, 23));
+        btnEmoji.setMinimumSize(new java.awt.Dimension(23, 23));
+        btnEmoji.setNextFocusableComponent(emoScrollPanel);
+        btnEmoji.setPreferredSize(new java.awt.Dimension(23, 23));
+        btnEmoji.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                btnEmojiFocusLost(evt);
+            }
+        });
+        btnEmoji.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmojiActionPerformed(evt);
+            }
+        });
+
+        txtMessage.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtMessageKeyReleased(evt);
+            }
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtMessageKeyTyped(evt);
+            }
+        });
+        jScrollPane1.setViewportView(txtMessage);
 
         javax.swing.GroupLayout panelMessageLayout = new javax.swing.GroupLayout(panelMessage);
         panelMessage.setLayout(panelMessageLayout);
         panelMessageLayout.setHorizontalGroup(
             panelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelMessageLayout.createSequentialGroup()
-                .addGroup(panelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelMessageLayout.createSequentialGroup()
-                        .addComponent(btnSendFile, javax.swing.GroupLayout.DEFAULT_SIZE, 123, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnEmoji, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane2))
+                .addComponent(btnSendFile, javax.swing.GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnEmoji, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnSend, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(panelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelMessageLayout.createSequentialGroup()
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 357, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 131, Short.MAX_VALUE)))
         );
         panelMessageLayout.setVerticalGroup(
             panelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelMessageLayout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGap(102, 102, 102)
+                .addGroup(panelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(btnSendFile)
-                    .addComponent(btnEmoji))
-                .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelMessageLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btnEmoji, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
             .addComponent(btnSend, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(panelMessageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelMessageLayout.createSequentialGroup()
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 26, Short.MAX_VALUE)))
         );
+
+        jLayeredPane1.add(panelMessage);
+        panelMessage.setBounds(0, 218, 500, 152);
+
+        emoScrollPanel.setBorder(null);
+        emoScrollPanel.setFocusCycleRoot(true);
+        emoScrollPanel.setFocusTraversalPolicyProvider(true);
+        emoScrollPanel.setInheritsPopupMenu(true);
+        emoScrollPanel.setNextFocusableComponent(emoPanel);
+        emoScrollPanel.setPreferredSize(new java.awt.Dimension(202, 150));
+        emoScrollPanel.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                emoScrollPanelFocusLost(evt);
+            }
+        });
+
+        emoPanel.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                emoPanelFocusLost(evt);
+            }
+        });
+        emoPanel.setLayout(new java.awt.GridBagLayout());
+
+        btnEmo1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/1.png"))); // NOI18N
+        btnEmo1.setBorder(null);
+        btnEmo1.setContentAreaFilled(false);
+        btnEmo1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo1.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo1ActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo1, gridBagConstraints);
+
+        btnEmo2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/2.png"))); // NOI18N
+        btnEmo2.setBorder(null);
+        btnEmo2.setBorderPainted(false);
+        btnEmo2.setContentAreaFilled(false);
+        btnEmo2.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo2.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo2ActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo2, gridBagConstraints);
+
+        btnEmo3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/3.png"))); // NOI18N
+        btnEmo3.setBorder(null);
+        btnEmo3.setBorderPainted(false);
+        btnEmo3.setContentAreaFilled(false);
+        btnEmo3.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo3.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo3, gridBagConstraints);
+
+        btnEmo4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/4.png"))); // NOI18N
+        btnEmo4.setBorder(null);
+        btnEmo4.setBorderPainted(false);
+        btnEmo4.setContentAreaFilled(false);
+        btnEmo4.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo4.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo4, gridBagConstraints);
+
+        btnEmo5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/5.png"))); // NOI18N
+        btnEmo5.setBorder(null);
+        btnEmo5.setBorderPainted(false);
+        btnEmo5.setContentAreaFilled(false);
+        btnEmo5.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo5.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo5, gridBagConstraints);
+
+        btnEmo6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/6.png"))); // NOI18N
+        btnEmo6.setBorder(null);
+        btnEmo6.setBorderPainted(false);
+        btnEmo6.setContentAreaFilled(false);
+        btnEmo6.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo6.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo6, gridBagConstraints);
+
+        btnEmo7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/7.png"))); // NOI18N
+        btnEmo7.setBorder(null);
+        btnEmo7.setBorderPainted(false);
+        btnEmo7.setContentAreaFilled(false);
+        btnEmo7.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo7.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo7, gridBagConstraints);
+
+        btnEmo8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/8.png"))); // NOI18N
+        btnEmo8.setBorder(null);
+        btnEmo8.setBorderPainted(false);
+        btnEmo8.setContentAreaFilled(false);
+        btnEmo8.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo8.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo8, gridBagConstraints);
+
+        btnEmo9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/9.png"))); // NOI18N
+        btnEmo9.setBorder(null);
+        btnEmo9.setBorderPainted(false);
+        btnEmo9.setContentAreaFilled(false);
+        btnEmo9.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo9.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo9, gridBagConstraints);
+
+        btnEmo10.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/10.png"))); // NOI18N
+        btnEmo10.setBorder(null);
+        btnEmo10.setBorderPainted(false);
+        btnEmo10.setContentAreaFilled(false);
+        btnEmo10.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo10.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo10, gridBagConstraints);
+
+        btnEmo11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/11.png"))); // NOI18N
+        btnEmo11.setBorder(null);
+        btnEmo11.setBorderPainted(false);
+        btnEmo11.setContentAreaFilled(false);
+        btnEmo11.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo11.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo11, gridBagConstraints);
+
+        btnEmo12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/12.png"))); // NOI18N
+        btnEmo12.setBorder(null);
+        btnEmo12.setBorderPainted(false);
+        btnEmo12.setContentAreaFilled(false);
+        btnEmo12.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo12.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo12.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo12ActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo12, gridBagConstraints);
+
+        btnEmo13.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/13.png"))); // NOI18N
+        btnEmo13.setBorder(null);
+        btnEmo13.setBorderPainted(false);
+        btnEmo13.setContentAreaFilled(false);
+        btnEmo13.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo13.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo13, gridBagConstraints);
+
+        btnEmo14.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/14.png"))); // NOI18N
+        btnEmo14.setBorder(null);
+        btnEmo14.setBorderPainted(false);
+        btnEmo14.setContentAreaFilled(false);
+        btnEmo14.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo14.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo14, gridBagConstraints);
+
+        btnEmo15.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/15.png"))); // NOI18N
+        btnEmo15.setBorder(null);
+        btnEmo15.setBorderPainted(false);
+        btnEmo15.setContentAreaFilled(false);
+        btnEmo15.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo15.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo15, gridBagConstraints);
+
+        btnEmo16.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/16.png"))); // NOI18N
+        btnEmo16.setBorder(null);
+        btnEmo16.setBorderPainted(false);
+        btnEmo16.setContentAreaFilled(false);
+        btnEmo16.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo16.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo16, gridBagConstraints);
+
+        btnEmo17.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/17.png"))); // NOI18N
+        btnEmo17.setBorder(null);
+        btnEmo17.setBorderPainted(false);
+        btnEmo17.setContentAreaFilled(false);
+        btnEmo17.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo17.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo17, gridBagConstraints);
+
+        btnEmo18.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/18.png"))); // NOI18N
+        btnEmo18.setBorder(null);
+        btnEmo18.setBorderPainted(false);
+        btnEmo18.setContentAreaFilled(false);
+        btnEmo18.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo18.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo18.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo18ActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo18, gridBagConstraints);
+
+        btnEmo19.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/19.png"))); // NOI18N
+        btnEmo19.setBorder(null);
+        btnEmo19.setBorderPainted(false);
+        btnEmo19.setContentAreaFilled(false);
+        btnEmo19.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo19.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo19, gridBagConstraints);
+
+        btnEmo20.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/20.png"))); // NOI18N
+        btnEmo20.setBorder(null);
+        btnEmo20.setBorderPainted(false);
+        btnEmo20.setContentAreaFilled(false);
+        btnEmo20.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnEmo20.setPreferredSize(new java.awt.Dimension(40, 40));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        emoPanel.add(btnEmo20, gridBagConstraints);
+
+        emoScrollPanel.setViewportView(emoPanel);
+
+        jLayeredPane1.setLayer(emoScrollPanel, javax.swing.JLayeredPane.PALETTE_LAYER);
+        jLayeredPane1.add(emoScrollPanel);
+        emoScrollPanel.setBounds(250, 205, 225, 130);
+        emoScrollPanel.getAccessibleContext().setAccessibleParent(this);
+
+        txtContent.setRequestFocusEnabled(false);
+        jScrollPane3.setViewportView(txtContent);
+
+        jLayeredPane1.add(jScrollPane3);
+        jScrollPane3.setBounds(0, 0, 500, 220);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panelMessage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jScrollPane1)
+            .addComponent(jLayeredPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 500, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 297, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(panelMessage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addComponent(jLayeredPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 370, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendActionPerformed
-        if(txtMessage.getText().trim().length()==0)return;
+    private void btnEmojiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmojiActionPerformed
+        // TODO add your handling code here:
+        if (emoScrollPanel.isVisible()) {
+            emoScrollPanel.setVisible(false);
+        } else {
+            emoScrollPanel.setVisible(true);
+            emoPanel.setFocusable(true);
+            emoScrollPanel.addFocusListener(new FocusListener() {
+                @Override
+                public void focusGained(FocusEvent e) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void focusLost(FocusEvent e) {
+                    emoScrollPanel.setVisible(false);
+                }
+                });
+            }
+
+    }//GEN-LAST:event_btnEmojiActionPerformed
+
+    private void sendFile(File sendfile) {
         try {
-            os.writeBytes(txtMessage.getText());
-            os.write(13);
-            os.write(10);
+            byte[] mybytearray = new byte[(int) sendfile.length()];
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(sendfile));
+            bis.read(mybytearray, 0, mybytearray.length);
+            os = transSocket.getOutputStream();
+            os.write(mybytearray, 0, mybytearray.length);
             os.flush();
-            this.txtConversation.append("\n" + this.sender + ": " + this.txtMessage.getText());
-            txtMessage.setText("");
+            bis.close();
+            docContent.insertString(docContent.getLength(), "\nYou have sent " + this.receiver + " a file " + sendfile.getName(), null);
+
         } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Send file Error!");
+            System.exit(0);
+
         }
-     
-    }//GEN-LAST:event_btnSendActionPerformed
+
+    }
 
     private void btnSendFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendFileActionPerformed
         // TODO add your handling code here:
-        try {
-            int result = fc.showOpenDialog(this);
+       try {
+            int result = fc.showOpenDialog(null);
             fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fc.setDialogTitle("Choose a Text File to send");
-            if(result == JFileChooser.APPROVE_OPTION){
-                File f = fc.getSelectedFile();
-                if(f.isFile()){
-                    FileReader fr = new FileReader(f);
-                    BufferedReader br = new BufferedReader(fr);
-                    String s="", content="";
-                    while((s = br.readLine())!= null){
-                        content += s + "\n";
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File sendfile = fc.getSelectedFile();
+                if (sendfile.isFile()) {
+                    dosfile.writeBytes(sendfile.getName());
+                    dosfile.writeByte(13);
+                    dosfile.flush();
+                    sendFile(sendfile);
+                }
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Send File Error!");
+            System.exit(0);
+
+        }
+    }//GEN-LAST:event_btnSendFileActionPerformed
+
+    private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendActionPerformed
+        if (txtMessage.getText().trim().length() == 0) {
+            return;
+        }
+        try {
+            dosChat.writeBytes(txtMessage.getText());
+            dosChat.write(13);
+            dosChat.write(10);
+            dosChat.flush();
+            docContent.insertString(docContent.getLength(), this.sender + ": " + this.txtMessage.getText() + "\n", null);
+            txtMessage.setText("");
+        } catch (Exception e) {
+        }
+
+    }//GEN-LAST:event_btnSendActionPerformed
+
+    private void btnEmo1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo1ActionPerformed
+        // TODO add your handling code here:
+          try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo1", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+            Logger.getLogger(ChatPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }//GEN-LAST:event_btnEmo1ActionPerformed
+
+    private void CheckTypingEmoji() {
+        try {
+            String message;
+            Set<String> key = emos.keySet();
+            Iterator<String> itr = key.iterator();
+            StyleContext context = new StyleContext();
+            Style labelStyle = context.getStyle(StyleContext.DEFAULT_STYLE);
+            while (itr.hasNext()) {
+                String symbol = itr.next();
+                String icon = emos.get(symbol);
+                message = this.txtMessage.getText();
+
+                while (true) {
+                    int pos = docMessage.getText(0, docMessage.getLength()).indexOf(symbol);
+                    if (pos < 0) {
+                        break;
                     }
-                    os.writeBytes("##@@$$");
-                    os.writeByte(10);
-                    os.writeBytes(f.getName());
-                    os.writeByte(10);
-                    os.writeBytes(content);
-                    os.writeByte(10);
-                    os.writeBytes("###EOF###");
-                    os.writeByte(10);
-                    os.flush();
-                    fr.close();
+                    JLabel label = new JLabel(new ImageIcon(getClass().getResource("/emo/" + icon + ".png")));
+                    StyleConstants.setComponent(labelStyle, label);
+                    docMessage.remove(pos, symbol.length());
+                    docMessage.insertString(pos , "#emo"+icon, labelStyle);
+
                 }
             }
         } catch (Exception e) {
         }
-    }//GEN-LAST:event_btnSendFileActionPerformed
+    }
+    private void btnEmo12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo12ActionPerformed
+        // TODO add your handling code here:
+          try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo12", null);
+        } catch (BadLocationException ex) {
+            Logger.getLogger(ChatPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnEmo12ActionPerformed
+
+    private void btnEmo18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo18ActionPerformed
+        // TODO add your handling code here:
+          try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo18", null);
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo18ActionPerformed
+
+    private void txtMessageKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtMessageKeyTyped
+        // TODO add your handling code here:
+        if (evt.getKeyChar() == KeyEvent.VK_ENTER) {
+            try {
+                dosChat.writeBytes(txtMessage.getText());
+                dosChat.write(13);
+                dosChat.write(10);
+                dosChat.flush();
+                docContent.insertString(docContent.getLength(), this.sender + ": " + this.txtMessage.getText(), null);
+                txtMessage.setText("");
+            } catch (Exception e) {
+            }
+        }
+    }//GEN-LAST:event_txtMessageKeyTyped
+
+    private void txtMessageKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtMessageKeyReleased
+        // TODO add your handling code here:
+        CheckTypingEmoji();
+    }//GEN-LAST:event_txtMessageKeyReleased
+
+    private void btnEmo2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo2ActionPerformed
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo2", null);
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo2ActionPerformed
+
+    private void emoScrollPanelFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_emoScrollPanelFocusLost
+        // TODO add your handling code here:
+        emoScrollPanel.setVisible(false);
+    }//GEN-LAST:event_emoScrollPanelFocusLost
+
+    private void emoPanelFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_emoPanelFocusLost
+        // TODO add your handling code here:
+        emoScrollPanel.setVisible(false);
+
+    }//GEN-LAST:event_emoPanelFocusLost
+
+    private void btnEmojiFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_btnEmojiFocusLost
+        // TODO add your handling code here:
+        
+    }//GEN-LAST:event_btnEmojiFocusLost
+
+    private static Icon resizeIcon(ImageIcon icon, int resizedWidth, int resizedHeight) {
+        Image img = icon.getImage();
+        Image resizedImage = img.getScaledInstance(resizedWidth, resizedHeight, java.awt.Image.SCALE_SMOOTH);
+        return new ImageIcon(resizedImage);
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnEmo1;
+    private javax.swing.JButton btnEmo10;
+    private javax.swing.JButton btnEmo11;
+    private javax.swing.JButton btnEmo12;
+    private javax.swing.JButton btnEmo13;
+    private javax.swing.JButton btnEmo14;
+    private javax.swing.JButton btnEmo15;
+    private javax.swing.JButton btnEmo16;
+    private javax.swing.JButton btnEmo17;
+    private javax.swing.JButton btnEmo18;
+    private javax.swing.JButton btnEmo19;
+    private javax.swing.JButton btnEmo2;
+    private javax.swing.JButton btnEmo20;
+    private javax.swing.JButton btnEmo3;
+    private javax.swing.JButton btnEmo4;
+    private javax.swing.JButton btnEmo5;
+    private javax.swing.JButton btnEmo6;
+    private javax.swing.JButton btnEmo7;
+    private javax.swing.JButton btnEmo8;
+    private javax.swing.JButton btnEmo9;
     private javax.swing.JButton btnEmoji;
     private javax.swing.JButton btnSend;
     private javax.swing.JButton btnSendFile;
+    private javax.swing.JPanel emoPanel;
+    private javax.swing.JScrollPane emoScrollPanel;
+    private javax.swing.JLayeredPane jLayeredPane1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JPanel panelEmoji;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JPanel panelMessage;
-    private javax.swing.JTextArea txtConversation;
-    private javax.swing.JTextArea txtMessage;
+    private javax.swing.JTextPane txtContent;
+    private javax.swing.JTextPane txtMessage;
     // End of variables declaration//GEN-END:variables
 }
