@@ -5,10 +5,13 @@ import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 /*
@@ -38,7 +41,7 @@ public class OutputThread extends Thread {
         this.sender = sender;
         this.receiver = receiver;
         try {
-            bf = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            bf = new BufferedReader(new InputStreamReader(socket.getInputStream(),"UTF8"));
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Network Error!");
             System.exit(0);
@@ -60,6 +63,10 @@ public class OutputThread extends Thread {
                 }
             } catch (Exception e) {
                  JOptionPane.showMessageDialog(null, receiver + " is Offline.");
+                try {
+                    doc.insertString(doc.getLength(), this.receiver + " is Offline!\n", null);
+                } catch (BadLocationException ex) {
+                }
                  return;
             }
         }

@@ -6,10 +6,13 @@ import java.awt.FlowLayout;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.*;
 import java.util.Random;
 import javax.swing.JOptionPane;
+import javax.swing.JRootPane;
+import javax.swing.SwingUtilities;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -26,16 +29,16 @@ public class Chat extends javax.swing.JFrame implements Runnable {
     ServerSocket fileSocket = null;
     ServerSocket thisSocket = null;
     BufferedReader br = null;
-    DataOutputStream os = null;
+    OutputStreamWriter osw = null;
     Thread t; //Thread for exploring connection from clients;
 
     //Client Role
     Socket srvSocket = null;
     Socket fileServerSocket = null;
-    String srvIP = "";
-    int srvPort = 0;
-    String name = "";
-    DataOutputStream dos = null;
+    String srvIP;
+    int srvPort;
+    String name;
+    OutputStreamWriter ow = null;
     OutputThread ot = null;
     BufferedReader bf = null;
     ChatPanel cp;
@@ -53,7 +56,7 @@ public class Chat extends javax.swing.JFrame implements Runnable {
                 }
             } while (name.isEmpty());
         } catch (Exception e) {
-            System.exit(0);
+            return;
         }
         this.txtServerIP.requestFocus();
         Random rd = new Random();
@@ -62,8 +65,8 @@ public class Chat extends javax.swing.JFrame implements Runnable {
         int thisPort;
         int filePort;
         do {
-            thisPort = rd.nextInt((max - min) + min);
-            filePort = rd.nextInt((max - min) + min);
+            thisPort = rd.nextInt((max - min) + 1) + min;
+            filePort = rd.nextInt((max - min) + 1) + min;
         } while (filePort == thisPort);
 
         try {
@@ -74,10 +77,10 @@ public class Chat extends javax.swing.JFrame implements Runnable {
 
         } catch (Exception e) {
         }
-
+        this.txtName.setEditable(false);
         t = new Thread(this);
         t.start();
-        getRootPane().setDefaultButton(btnConnect);
+
     }
 
     /**
@@ -134,7 +137,9 @@ public class Chat extends javax.swing.JFrame implements Runnable {
         jLabel4.setText("Name:");
         panelInfo.add(jLabel4);
 
-        txtName.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
+        txtName.setFont(new java.awt.Font("Times New Roman", 0, 14)); // NOI18N
+        txtName.setForeground(new java.awt.Color(0, 102, 255));
+        txtName.setBorder(null);
         txtName.setPreferredSize(new java.awt.Dimension(100, 28));
         panelInfo.add(txtName);
 
@@ -144,11 +149,6 @@ public class Chat extends javax.swing.JFrame implements Runnable {
 
         txtServerIP.setFont(new java.awt.Font("Monospaced", 0, 12)); // NOI18N
         txtServerIP.setPreferredSize(new java.awt.Dimension(115, 28));
-        txtServerIP.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtServerIPActionPerformed(evt);
-            }
-        });
         panelInfo.add(txtServerIP);
 
         jLabel6.setFont(new java.awt.Font("Monospaced", 0, 11)); // NOI18N
@@ -157,16 +157,6 @@ public class Chat extends javax.swing.JFrame implements Runnable {
 
         txtServerPort.setFont(new java.awt.Font("Monospaced", 0, 12)); // NOI18N
         txtServerPort.setPreferredSize(new java.awt.Dimension(55, 28));
-        txtServerPort.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtServerPortActionPerformed(evt);
-            }
-        });
-        txtServerPort.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                txtServerPortKeyReleased(evt);
-            }
-        });
         panelInfo.add(txtServerPort);
 
         btnConnect.setFont(new java.awt.Font("Monospaced", 0, 12)); // NOI18N
@@ -189,18 +179,16 @@ public class Chat extends javax.swing.JFrame implements Runnable {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void txtServerIPActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtServerIPActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtServerIPActionPerformed
-
 
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
         //Connect to server
         if (this.txtServerIP.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter a valid IP!");
             this.txtServerIP.requestFocus();
+            btnConnect.requestFocus();
             return;
         }
+
         if (this.txtServerPort.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter a valid port!");
             this.txtServerPort.requestFocus();
@@ -208,7 +196,13 @@ public class Chat extends javax.swing.JFrame implements Runnable {
         }
 
         srvIP = this.txtServerIP.getText();
-        srvPort = Integer.parseInt(txtServerPort.getText());
+        try {
+            srvPort = Integer.parseInt(txtServerPort.getText());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid port!");
+            return;
+        }
+
         name = this.txtName.getText();
 
         try {
@@ -230,29 +224,18 @@ public class Chat extends javax.swing.JFrame implements Runnable {
                     tabPanel.add(srvName, cp);
                     cp.updateUI();
                 }
-                dos = new DataOutputStream(srvSocket.getOutputStream());
+                OutputStreamWriter ow = new OutputStreamWriter(srvSocket.getOutputStream(), "UTF8");
                 // Annouce to server
-                dos.writeBytes("Client:" + name);
-                dos.writeByte(13);
-                dos.writeByte(10);
-                dos.flush();
+                ow.write("Client:" + name);
+                ow.write(13);
+                ow.write(13);
+                ow.flush();
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Connect button");
-            System.exit(0);
         }
 
 
     }//GEN-LAST:event_btnConnectActionPerformed
-
-    private void txtServerPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtServerPortActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtServerPortActionPerformed
-
-    private void txtServerPortKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtServerPortKeyReleased
-        // TODO add your handling code here:
-
-    }//GEN-LAST:event_txtServerPortKeyReleased
 
     /**
      * @param args the command line arguments
@@ -291,15 +274,15 @@ public class Chat extends javax.swing.JFrame implements Runnable {
                 if (chatClientSocket != null) {
                     isConnected = true;
                     String hostName = this.txtName.getText();
-                    //                    Send filePort
-                    os = new DataOutputStream(chatClientSocket.getOutputStream());
-                    os.writeBytes("Host:" + hostName);
-                    os.writeByte(13);
+                    //Send filePort
+                    ow = new OutputStreamWriter(chatClientSocket.getOutputStream(), "UTF8");
+                    ow.write("Host:" + hostName);
+                    ow.write(13);
 
-                    os.writeBytes("Port:" + fileSocket.getLocalPort());
-                    os.writeByte(13);
-                    os.writeByte(10);
-                    os.flush();
+                    ow.write("Port:" + fileSocket.getLocalPort());
+                    ow.write(13);
+                    ow.write(10);
+                    ow.flush();
 
                     br = new BufferedReader(new InputStreamReader(chatClientSocket.getInputStream()));
                     String s = br.readLine();
@@ -315,7 +298,8 @@ public class Chat extends javax.swing.JFrame implements Runnable {
                 }
                 Thread.sleep(500);
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Dsicconected!");
+                JOptionPane.showMessageDialog(this, "Network Error!");
+                return;
             }
         }
     }

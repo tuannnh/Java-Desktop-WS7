@@ -92,7 +92,7 @@ public class TransferThread extends Thread {
                     String fileName = bf.readLine();
                     if (fileName != null) {
                         saveFile(fileName);
-                        doc.insertString(doc.getLength(), "\nDownloaded a file " + fileName + " from " + this.sender + "!", null);
+                        doc.insertString(doc.getLength(), "\nDownloaded a file " + fileName + " from " + this.sender + "!\n", null);
                     }
                     sleep(500);
                 }

@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import static java.lang.Thread.sleep;
 import java.net.Socket;
 import java.util.Hashtable;
@@ -50,6 +51,7 @@ public class ChatPanel extends javax.swing.JPanel {
     BufferedReader bf = null;
     BufferedReader br = null;
     DataOutputStream dosChat = null;
+    OutputStreamWriter oswChat = null;
     OutputThread t = null;
     String sender;
     String receiver;
@@ -59,7 +61,7 @@ public class ChatPanel extends javax.swing.JPanel {
     DataOutputStream dosfile = null;
     OutputStream os = null;
     TransferThread transThread = null;
-    Document docContent,docMessage;
+    Document docContent, docMessage;
 
     Hashtable<String, String> emos = new Hashtable<>();
     EmoThread emoThread = null;
@@ -83,6 +85,7 @@ public class ChatPanel extends javax.swing.JPanel {
             //Input buffer and Output Buffer
             bf = new BufferedReader(new InputStreamReader(chatSocket.getInputStream()));
             dosChat = new DataOutputStream(chatSocket.getOutputStream());
+            oswChat = new OutputStreamWriter(chatSocket.getOutputStream(), "UTF8");
             t = new OutputThread(chatSocket, txtContent, sender, receiver);
             t.start();
 
@@ -97,14 +100,19 @@ public class ChatPanel extends javax.swing.JPanel {
             emoThread.start();
 
             for (int i = 1; i < 21; i++) {
-                emos.put(":emo" + i, "" + i);
+                if (i < 10) {
+                    emos.put(":emo0" + i, "" + i);
+                } else {
+                    emos.put(":emo" + i, "" + i);
+                }
             }
         } catch (Exception e) {
+
         }
 
         docContent = this.txtContent.getDocument();
         docMessage = this.txtMessage.getDocument();
-        
+
         emoScrollPanel.setVisible(false);
     }
 
@@ -191,6 +199,11 @@ public class ChatPanel extends javax.swing.JPanel {
             }
         });
 
+        txtMessage.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                txtMessageFocusGained(evt);
+            }
+        });
         txtMessage.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 txtMessageKeyReleased(evt);
@@ -247,11 +260,6 @@ public class ChatPanel extends javax.swing.JPanel {
             }
         });
 
-        emoPanel.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                emoPanelFocusLost(evt);
-            }
-        });
         emoPanel.setLayout(new java.awt.GridBagLayout());
 
         btnEmo1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/emo/1.png"))); // NOI18N
@@ -291,6 +299,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo3.setContentAreaFilled(false);
         btnEmo3.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo3.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo3ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.ipadx = 1;
         gridBagConstraints.ipady = 1;
@@ -302,6 +315,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo4.setContentAreaFilled(false);
         btnEmo4.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo4.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo4ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.ipadx = 1;
         gridBagConstraints.ipady = 1;
@@ -313,6 +331,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo5.setContentAreaFilled(false);
         btnEmo5.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo5.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo5ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.ipadx = 1;
         gridBagConstraints.ipady = 1;
@@ -324,6 +347,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo6.setContentAreaFilled(false);
         btnEmo6.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo6.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo6ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
@@ -337,6 +365,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo7.setContentAreaFilled(false);
         btnEmo7.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo7.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo7ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
@@ -350,6 +383,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo8.setContentAreaFilled(false);
         btnEmo8.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo8.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo8ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 1;
@@ -363,6 +401,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo9.setContentAreaFilled(false);
         btnEmo9.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo9.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo9ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 1;
@@ -376,6 +419,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo10.setContentAreaFilled(false);
         btnEmo10.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo10.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo10.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo10ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 4;
         gridBagConstraints.gridy = 1;
@@ -389,6 +437,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo11.setContentAreaFilled(false);
         btnEmo11.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo11.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo11.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo11ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
@@ -420,6 +473,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo13.setContentAreaFilled(false);
         btnEmo13.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo13.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo13.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo13ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 2;
@@ -433,6 +491,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo14.setContentAreaFilled(false);
         btnEmo14.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo14.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo14.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo14ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 2;
@@ -446,6 +509,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo15.setContentAreaFilled(false);
         btnEmo15.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo15.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo15.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo15ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 4;
         gridBagConstraints.gridy = 2;
@@ -459,6 +527,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo16.setContentAreaFilled(false);
         btnEmo16.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo16.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo16.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo16ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 3;
@@ -472,6 +545,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo17.setContentAreaFilled(false);
         btnEmo17.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo17.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo17.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo17ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 3;
@@ -503,6 +581,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo19.setContentAreaFilled(false);
         btnEmo19.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo19.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo19.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo19ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 3;
@@ -516,6 +599,11 @@ public class ChatPanel extends javax.swing.JPanel {
         btnEmo20.setContentAreaFilled(false);
         btnEmo20.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         btnEmo20.setPreferredSize(new java.awt.Dimension(40, 40));
+        btnEmo20.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEmo20ActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 4;
         gridBagConstraints.gridy = 3;
@@ -552,21 +640,12 @@ public class ChatPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         if (emoScrollPanel.isVisible()) {
             emoScrollPanel.setVisible(false);
+            txtMessage.requestFocus();
+            return;
         } else {
             emoScrollPanel.setVisible(true);
-            emoPanel.setFocusable(true);
-            emoScrollPanel.addFocusListener(new FocusListener() {
-                @Override
-                public void focusGained(FocusEvent e) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public void focusLost(FocusEvent e) {
-                    emoScrollPanel.setVisible(false);
-                }
-                });
-            }
+            emoPanel.requestFocus();
+        }
 
     }//GEN-LAST:event_btnEmojiActionPerformed
 
@@ -579,19 +658,18 @@ public class ChatPanel extends javax.swing.JPanel {
             os.write(mybytearray, 0, mybytearray.length);
             os.flush();
             bis.close();
-            docContent.insertString(docContent.getLength(), "\nYou have sent " + this.receiver + " a file " + sendfile.getName(), null);
+            docContent.insertString(docContent.getLength(), "\nYou have sent " + this.receiver + " a file " + sendfile.getName() + "\n", null);
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Send file Error!");
-            System.exit(0);
-
+            return;
         }
 
     }
 
     private void btnSendFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendFileActionPerformed
         // TODO add your handling code here:
-       try {
+        try {
             int result = fc.showOpenDialog(null);
             fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fc.setDialogTitle("Choose a Text File to send");
@@ -617,10 +695,10 @@ public class ChatPanel extends javax.swing.JPanel {
             return;
         }
         try {
-            dosChat.writeBytes(txtMessage.getText());
-            dosChat.write(13);
-            dosChat.write(10);
-            dosChat.flush();
+            oswChat.write(txtMessage.getText());
+            oswChat.write(13);
+            oswChat.write(13);
+            oswChat.flush();
             docContent.insertString(docContent.getLength(), this.sender + ": " + this.txtMessage.getText() + "\n", null);
             txtMessage.setText("");
         } catch (Exception e) {
@@ -630,15 +708,14 @@ public class ChatPanel extends javax.swing.JPanel {
 
     private void btnEmo1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo1ActionPerformed
         // TODO add your handling code here:
-          try {
+        try {
             // TODO add your handling code here:
-            docMessage.insertString(docMessage.getLength(), " :emo1", null);
+            docMessage.insertString(docMessage.getLength(), " :emo01", null);
             CheckTypingEmoji();
 
         } catch (BadLocationException ex) {
-            Logger.getLogger(ChatPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
     }//GEN-LAST:event_btnEmo1ActionPerformed
 
     private void CheckTypingEmoji() {
@@ -661,7 +738,11 @@ public class ChatPanel extends javax.swing.JPanel {
                     JLabel label = new JLabel(new ImageIcon(getClass().getResource("/emo/" + icon + ".png")));
                     StyleConstants.setComponent(labelStyle, label);
                     docMessage.remove(pos, symbol.length());
-                    docMessage.insertString(pos , "#emo"+icon, labelStyle);
+                    if (Integer.parseInt(icon) < 10) {
+                        docMessage.insertString(pos, "#emo0" + icon, labelStyle);
+                    } else {
+                        docMessage.insertString(pos, "#emo" + icon, labelStyle);
+                    }
 
                 }
             }
@@ -670,19 +751,18 @@ public class ChatPanel extends javax.swing.JPanel {
     }
     private void btnEmo12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo12ActionPerformed
         // TODO add your handling code here:
-          try {
-            // TODO add your handling code here:
+        try {
             docMessage.insertString(docMessage.getLength(), " :emo12", null);
+            CheckTypingEmoji();
         } catch (BadLocationException ex) {
-            Logger.getLogger(ChatPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_btnEmo12ActionPerformed
 
     private void btnEmo18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo18ActionPerformed
         // TODO add your handling code here:
-          try {
-            // TODO add your handling code here:
+        try {
             docMessage.insertString(docMessage.getLength(), " :emo18", null);
+            CheckTypingEmoji();
         } catch (BadLocationException ex) {
         }
     }//GEN-LAST:event_btnEmo18ActionPerformed
@@ -691,12 +771,17 @@ public class ChatPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         if (evt.getKeyChar() == KeyEvent.VK_ENTER) {
             try {
-                dosChat.writeBytes(txtMessage.getText());
-                dosChat.write(13);
-                dosChat.write(10);
-                dosChat.flush();
+                if (txtMessage.getText().trim().length() == 0) {
+                    txtMessage.setText("");
+                    return;
+                }
+                oswChat.write(txtMessage.getText());
+                oswChat.write(13);
+                oswChat.write(13);
+                oswChat.flush();
                 docContent.insertString(docContent.getLength(), this.sender + ": " + this.txtMessage.getText(), null);
                 txtMessage.setText("");
+
             } catch (Exception e) {
             }
         }
@@ -709,27 +794,201 @@ public class ChatPanel extends javax.swing.JPanel {
 
     private void btnEmo2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo2ActionPerformed
         try {
-            // TODO add your handling code here:
-            docMessage.insertString(docMessage.getLength(), " :emo2", null);
+            docMessage.insertString(docMessage.getLength(), " :emo02", null);
+            CheckTypingEmoji();
         } catch (BadLocationException ex) {
         }
     }//GEN-LAST:event_btnEmo2ActionPerformed
+
+    private void btnEmojiFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_btnEmojiFocusLost
+        // TODO add your handling code here:
+
+    }//GEN-LAST:event_btnEmojiFocusLost
+
+    private void btnEmo3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo3ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo03", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo3ActionPerformed
+
+    private void btnEmo4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo4ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo04", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo4ActionPerformed
+
+    private void btnEmo5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo5ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo05", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo5ActionPerformed
+
+    private void btnEmo6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo6ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo06", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo6ActionPerformed
+
+    private void btnEmo7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo7ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo07", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo7ActionPerformed
+
+    private void btnEmo8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo8ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo08", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo8ActionPerformed
+
+    private void btnEmo9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo9ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo09", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo9ActionPerformed
+
+    private void btnEmo10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo10ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo10", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo10ActionPerformed
+
+    private void btnEmo11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo11ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo11", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo11ActionPerformed
+
+    private void btnEmo13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo13ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo13", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo13ActionPerformed
+
+    private void btnEmo14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo14ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo14", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo14ActionPerformed
+
+    private void btnEmo15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo15ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo15", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo15ActionPerformed
+
+    private void btnEmo16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo16ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo16", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo16ActionPerformed
+
+    private void btnEmo17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo17ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo17", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo17ActionPerformed
+
+    private void btnEmo19ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo19ActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo19", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo19ActionPerformed
+
+    private void btnEmo20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmo20ActionPerformed
+        try {
+            // TODO add your handling code here:
+            docMessage.insertString(docMessage.getLength(), " :emo20", null);
+            CheckTypingEmoji();
+
+        } catch (BadLocationException ex) {
+        }
+    }//GEN-LAST:event_btnEmo20ActionPerformed
 
     private void emoScrollPanelFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_emoScrollPanelFocusLost
         // TODO add your handling code here:
         emoScrollPanel.setVisible(false);
     }//GEN-LAST:event_emoScrollPanelFocusLost
 
-    private void emoPanelFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_emoPanelFocusLost
+    private void txtMessageFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtMessageFocusGained
         // TODO add your handling code here:
         emoScrollPanel.setVisible(false);
-
-    }//GEN-LAST:event_emoPanelFocusLost
-
-    private void btnEmojiFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_btnEmojiFocusLost
-        // TODO add your handling code here:
-        
-    }//GEN-LAST:event_btnEmojiFocusLost
+    }//GEN-LAST:event_txtMessageFocusGained
 
     private static Icon resizeIcon(ImageIcon icon, int resizedWidth, int resizedHeight) {
         Image img = icon.getImage();

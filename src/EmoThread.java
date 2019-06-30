@@ -40,7 +40,8 @@ public class EmoThread extends Thread {
         this.txtMessage = message;
         this.txtContent = content;
         for (int i = 1; i < 21; i++) {
-            emos.put("#emo" + i, "" + i);
+            if(i<10)emos.put("#emo0" + i, "" + i);
+            else emos.put("#emo" + i, "" + i);
         }
 
         doc = this.txtContent.getDocument();
